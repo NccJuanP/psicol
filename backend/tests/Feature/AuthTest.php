@@ -1,17 +1,8 @@
 <?php
 
 use App\Domain\Identity\Enums\Role;
-use App\Domain\Identity\Models\User;
-use Database\Seeders\RolesAndPermissionsSeeder;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
-
-beforeEach(fn () => $this->seed(RolesAndPermissionsSeeder::class));
-
-function userWithRole(Role $role, array $attributes = []): User
-{
-    return User::factory()->create(['password' => 'Password123!', ...$attributes])->assignRole($role->value);
-}
 
 it('logs in and returns a bearer token that expires in 8 hours', function () {
     $user = userWithRole(Role::Agent);

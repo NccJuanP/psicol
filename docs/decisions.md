@@ -45,3 +45,39 @@ Formato: **ID — título**, con contexto, decisión y razón.
 - **Contexto:** el esqueleto de Laravel trae esas columnas; la sección 6 del plan no las incluye.
 - **Decisión:** se quitan y se agrega `is_active`.
 - **Razón:** no hay verificación de correo ni sesiones "recordarme" en una API con tokens Bearer.
+
+## D-32 — Sin DTOs en `Application/Incidents/Data`
+
+- **Contexto:** la sección 9 lista DTOs readonly construidos desde los FormRequest.
+- **Decisión:** las Actions reciben el arreglo de `$request->validated()` y convierten a enums y fechas en un solo lugar.
+- **Razón:** el FormRequest ya fija la forma de la entrada; un DTO por endpoint repetiría cada campo sin proteger ninguna regla adicional.
+
+## D-33 — No se quita el responsable de un caso en progreso o en espera
+
+- **Contexto:** R-08 exige responsable para pasar a `in_progress`, pero el plan no dice qué pasa al desasignar después.
+- **Decisión:** `assignTo(null)` en `in_progress` u `on_hold` responde 409 `ASSIGNEE_REQUIRED`; reasignar a otro agente sí se permite.
+- **Razón:** "nada se atiende sin dueño" vale durante toda la atención, no solo al iniciarla.
+
+## D-34 — La fecha de vencimiento la cambian los mismos que repriorizan
+
+- **Contexto:** H-4 dice que `due_at` lo editan el asignado o el admin; el contrato solo expone `can.reprioritize`.
+- **Decisión:** un `PATCH` con `priority` o `due_at` exige la habilidad `reprioritize`.
+- **Razón:** son los mismos actores (asignado o admin) y el contrato no cambia; el frontend muestra ambos campos con `can.reprioritize`.
+
+## D-35 — Las transiciones inexistentes responden 409, no 403
+
+- **Contexto:** la policy decide quién ejecuta cada transición y el agregado decide si existe.
+- **Decisión:** si la transición no está en la máquina de estados (o el caso es terminal), la policy no la bloquea y el agregado responde 409; las reglas de "creador" y "asignado" se aplican por relación con el caso, sin importar el rol.
+- **Razón:** un error de dominio se informa como tal (`INVALID_STATUS_TRANSITION`, `INCIDENT_LOCKED`) y la regla de visibilidad ya impide sondear casos ajenos.
+
+## D-36 — Visibilidad por *route binding*
+
+- **Contexto:** R-16 aplica a detalle, edición, transición, asignación, eliminación y línea de tiempo.
+- **Decisión:** el parámetro `{incident}` se resuelve con `Incident::visibleTo($user)->findOrFail()` en `AppServiceProvider`.
+- **Razón:** una sola línea cubre todas las rutas presentes y futuras; ningún controlador puede olvidarla.
+
+## D-37 — Los tests pisan variables con `<server>` y se niegan a correr fuera de `*_test`
+
+- **Contexto:** Laravel lee primero `$_SERVER`, donde Docker deja `DB_DATABASE=incidents`; `<env force="true">` de PHPUnit solo escribe `$_ENV`, así que `RefreshDatabase` vaciaba la base principal.
+- **Decisión:** `phpunit.xml` usa `<server>` y `Tests\TestCase::createApplication()` aborta si la base no termina en `_test`.
+- **Razón:** un test nunca debe poder borrar datos reales.
