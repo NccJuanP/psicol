@@ -6,19 +6,18 @@ use App\Application\Incidents\Queries\IncidentFilters;
 use App\Domain\Incidents\Enums\IncidentStatus;
 use App\Domain\Incidents\Enums\IncidentType;
 use App\Domain\Incidents\Enums\Priority;
+use App\Http\Requests\Concerns\RejectsUnknownParameters;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Validator;
 
 /** Listing parameters of docs/api-contract.md. Any invalid or unknown parameter is a 422, never ignored. */
 class ListIncidentsRequest extends FormRequest
 {
-    public const SORTABLE = ['id', 'title', 'priority', 'status', 'due_at', 'created_at', 'updated_at'];
+    use RejectsUnknownParameters;
 
-    /** @var list<string> */
-    protected array $parameters = ['page', 'per_page', 'sort', 'search', 'filter'];
+    public const SORTABLE = ['id', 'title', 'priority', 'status', 'due_at', 'created_at', 'updated_at'];
 
     /**
      * @return array<string, mixed>
@@ -42,13 +41,9 @@ class ListIncidentsRequest extends FormRequest
         ];
     }
 
-    public function after(): array
+    protected function allowedParameters(): array
     {
-        return [function (Validator $validator) {
-            foreach (array_diff(array_keys($this->query()), $this->parameters) as $unknown) {
-                $validator->errors()->add($unknown, __('validation.unknown_parameter', ['parameter' => $unknown]));
-            }
-        }];
+        return ['page', 'per_page', 'sort', 'search', 'filter'];
     }
 
     public function perPage(): int

@@ -1,35 +1,57 @@
 # Rendimiento
 
-Mediciones de la Fase 5 con **100.000 incidentes** (5.000 del seeder por defecto más `php artisan incidents:seed-bulk --count=95000`, que tardó 11,4 s). Distribución sembrada: 59.989 activos, 11.926 de ellos vencidos (19,9 %).
+Mediciones de las Fases 5 y 6 con **100.000 incidentes**. Se sembraron 5.000 con el seeder por defecto y el resto con `php artisan incidents:seed-bulk --count=95000`, que tardó 11,4 s. De ellos, 59.989 están activos y 11.926 vencidos (19,9 % de los activos).
 
-Entorno: Docker Desktop en Windows 11, MySQL 8.4 y PHP 8.4-FPM con opcache, sin caché de aplicación. Son tiempos locales e indicativos, no un benchmark.
+**Entorno:** Docker Desktop en Windows 11, MySQL 8.4 y PHP 8.4-FPM con opcache, sin caché de aplicación. Son tiempos locales e indicativos, no un benchmark.
 
 ## Resumen
 
-| Consulta | `EXPLAIN` (página / conteo) | `paginate()` en PHP | HTTP de punta a punta |
+| Consulta | `EXPLAIN` (página / conteo) | En PHP | HTTP de punta a punta |
 |---|---|---|---|
-| Listado sin filtros | `index` / `index` (cubriente) | 10,7 ms | 47 ms |
-| Estado + prioridad | `index` / `range` | 31,9 ms | 68 ms |
-| Búsqueda por texto | `fulltext` / `fulltext` | 36,3 ms | 68 ms |
-| `assigned_to=me` | `index` / `ref` | 24,6 ms | 58 ms |
-| Conteo de vencidos | `range` | 24,3 ms | 91 ms (listado `filter[overdue]=true`) |
+| Listado sin filtros | `index` / `index` cubriente | 11,5 ms | 78 ms |
+| Estado + prioridad | `index` / `range` cubriente | 11,0 ms | 47 ms |
+| Búsqueda por texto | `fulltext` / `fulltext` | 39,0 ms | 75 ms |
+| `assigned_to=me` | `index` / `ref` | 27,3 ms | 81 ms |
+| Conteo de vencidos | `range` cubriente | 5,1 ms | 81 ms (listado `filter[overdue]=true`) |
+| Dashboard, admin (5 consultas) | `index`/`range`, todas cubrientes salvo "sin asignar" | 110,5 ms | 140 ms |
+| Dashboard, solicitante | — | 71,4 ms | — |
+| Exportación completa CSV (100.000 filas, 18 MB) | mismo plan que el listado | — | 16,8 s |
+| Exportación completa XLSX (100.000 filas, 6 MB) | mismo plan que el listado | — | 23,3 s |
 
-✅ Ningún plan usa `type = ALL`, y todo el listado responde por debajo de 300 ms.
+✅ Ningún plan usa `type = ALL`. El listado y el dashboard responden por debajo de 300 ms, así que el dashboard no necesita caché (D-12).
 
-- **`paginate()` en PHP:** es el conteo más la página más el eager loading, medido dentro del contenedor `app` con la mediana de 5 corridas.
-- **HTTP de punta a punta:** es `curl` a través del gateway con token Bearer, también mediana de 5. Incluye arranque de Laravel, autenticación y serialización.
+- **En PHP:** `paginate()` o `DashboardStatsQuery::handle()` medidos dentro del contenedor `app`; mediana de 5 corridas.
+- **HTTP de punta a punta:** `curl` a través del gateway con token Bearer; mediana de 5. Incluye el arranque de Laravel, la autenticación y la serialización.
+- **Memoria de la exportación:** durante la exportación de 100.000 filas el contenedor `app` se mantuvo en 46 MB.
 
-## Ajuste de índices durante la medición (D-38)
+## Ajustes de índices hechos al medir
 
-Con el índice del plan, `idx_incidents_created_at (created_at)`, el conteo del listado sin filtros (`WHERE deleted_at IS NULL`) daba `type = ALL`, porque ningún índice contiene `deleted_at`. Se probaron dos alternativas:
+### D-38: `idx_incidents_created_at` pasa a `(created_at, deleted_at)`
+
+Con el índice del plan, `(created_at)`, el conteo del listado sin filtros (`WHERE deleted_at IS NULL`) daba `type = ALL`, porque ningún índice incluía `deleted_at`.
 
 | Índice | Conteo sin filtros | Efecto secundario |
 |---|---|---|
 | `(created_at)` (plan) | `ALL`, 98.393 filas | — |
-| `(deleted_at, created_at)` | `ref` cubriente, 12,6 ms | ❌ El optimizador lo prefiere también para los conteos filtrados (estimación de 49.400 filas para `IS NULL`): estado + prioridad sube a 200 ms y vencidos a 176 ms. |
-| `(created_at, deleted_at)` | `index` cubriente, 10,7 ms | ✅ Ninguno. `ORDER BY created_at DESC, id DESC` sigue resolviéndose con el índice, porque MySQL omite la parte fijada por igualdad (`deleted_at IS NULL`). Como `deleted_at` no es prefijo, no compite con los demás índices. |
+| `(deleted_at, created_at)` | `ref` cubriente, 12,6 ms | ❌ El optimizador también lo prefiere para los conteos filtrados, porque estima 49.400 filas para `IS NULL`. Estado + prioridad sube a 200 ms y vencidos a 176 ms. |
+| `(created_at, deleted_at)` | `index` cubriente, 10,7 ms | ✅ Ninguno. `ORDER BY created_at DESC, id DESC` sigue resolviéndose con el índice, porque MySQL omite la parte fijada por igualdad. Como `deleted_at` no es prefijo, no compite con los otros índices. |
 
-Quedó `(created_at, deleted_at)` con el mismo nombre.
+### D-42: sufijo `deleted_at` en los índices de estado y prioridad
+
+En la primera medición, el dashboard del admin tardaba **356 ms**. Los dos `GROUP BY` recorrían el índice completo y luego leían cada fila solo para comprobar `deleted_at` (154 ms y 142 ms). En lugar de cachear, se agregó `deleted_at` al final de los dos índices:
+
+| Índice | Antes | Después |
+|---|---|---|
+| `idx_incidents_status_due` | `(status, due_at)` | `(status, due_at, deleted_at)` |
+| `idx_incidents_priority_status` | `(priority, status)` | `(priority, status, due_at, deleted_at)` |
+
+Con eso las agrupaciones quedan cubiertas por el índice (`Using index`):
+
+| Medición | Antes | Después |
+|---|---|---|
+| Dashboard | 356 ms | 98–110 ms |
+| Conteo de estado + prioridad | 32 ms | 11 ms |
+| Conteo de vencidos | 24 ms | 5 ms |
 
 ## Cómo reproducir
 
@@ -38,9 +60,9 @@ docker compose exec app php artisan incidents:seed-bulk --count=95000
 docker compose exec mysql mysql -uincidents -psecret incidents -e "ANALYZE TABLE incidents"
 ```
 
-Después se corre `EXPLAIN` sobre el SQL que produce `ListIncidentsQuery::builder()`; el detalle completo está abajo.
+Después se corre `EXPLAIN` sobre el SQL que generan `ListIncidentsQuery::builder()` y `DashboardStatsQuery::handle()`. Los planes están abajo.
 
-## Detalle por consulta
+## Listado: detalle por consulta
 
 ### Listado sin filtros
 
@@ -56,9 +78,9 @@ Conteo para la paginación:
 
 | tabla | type | key | rows | Extra |
 |---|---|---|---|---|
-| incidents | index | idx_incidents_created_at | 98556 | Using where; Using index |
+| incidents | index | idx_incidents_created_at | 98475 | Using where; Using index |
 
-Resultados: 100,000. Tiempo de `paginate()` (conteo + página + eager loading), mediana de 5: **10.7 ms**.
+Resultados: 100,000. Tiempo de `paginate()` (conteo + página + eager loading), mediana de 5: **11.5 ms**.
 
 ### Estado (open,in_progress) + prioridad (high,critical)
 
@@ -68,15 +90,15 @@ select `id`, `type`, `title`, `priority`, `status`, `created_by`, `assigned_to`,
 
 | tabla | type | key | rows | Extra |
 |---|---|---|---|---|
-| incidents | index | idx_incidents_created_at | 97 | Using where; Backward index scan |
+| incidents | index | idx_incidents_created_at | 77 | Using where; Backward index scan |
 
 Conteo para la paginación:
 
 | tabla | type | key | rows | Extra |
 |---|---|---|---|---|
-| incidents | range | idx_incidents_priority_status | 15095 | Using index condition; Using where |
+| incidents | range | idx_incidents_priority_status | 19030 | Using where; Using index |
 
-Resultados: 15,095. Tiempo de `paginate()` (conteo + página + eager loading), mediana de 5: **31.9 ms**.
+Resultados: 15,095. Tiempo de `paginate()` (conteo + página + eager loading), mediana de 5: **11.0 ms**.
 
 ### Búsqueda por texto "impresora"
 
@@ -94,7 +116,7 @@ Conteo para la paginación:
 |---|---|---|---|---|
 | incidents | fulltext | ft_incidents_search | 1 | Using where; Ft_hints: no_ranking |
 
-Resultados: 5,325. Tiempo de `paginate()` (conteo + página + eager loading), mediana de 5: **36.3 ms**.
+Resultados: 5,325. Tiempo de `paginate()` (conteo + página + eager loading), mediana de 5: **39.0 ms**.
 
 ### assigned_to=me (agente)
 
@@ -112,23 +134,69 @@ Conteo para la paginación:
 |---|---|---|---|---|
 | incidents | ref | idx_incidents_assignee_status | 28818 | Using where |
 
-Resultados: 14,200. Tiempo de `paginate()` (conteo + página + eager loading), mediana de 5: **24.6 ms**.
+Resultados: 14,200. Tiempo de `paginate()` (conteo + página + eager loading), mediana de 5: **27.3 ms**.
 
 ### Conteo de vencidos
 
 ```sql
-select count(*) as aggregate from `incidents` where `status` in ('open', 'in_progress', 'on_hold') and `due_at` < '2026-10-31 23:35:08' and `incidents`.`deleted_at` is null
+select count(*) as aggregate from `incidents` where `status` in ('open', 'in_progress', 'on_hold') and `due_at` < '2026-10-31 23:43:50' and `incidents`.`deleted_at` is null
 ```
 
 | tabla | type | key | rows | Extra |
 |---|---|---|---|---|
-| incidents | range | idx_incidents_status_due | 20679 | Using index condition; Using where |
+| incidents | range | idx_incidents_status_due | 15852 | Using where; Using index |
 
-Resultado: 11,926. Tiempo, mediana de 5: **24.3 ms**.
+Resultado: 11,926. Tiempo, mediana de 5: **5.1 ms**.
+
+## Dashboard: las cinco consultas (admin, sin filtros)
+
+```sql
+select status, count(*) as total from `incidents` where `incidents`.`deleted_at` is null group by `status`
+```
+
+| type | key | rows | Extra | tiempo |
+|---|---|---|---|---|
+| index | idx_incidents_status_due | 98475 | Using where; Using index | 18.8 ms |
+
+```sql
+select priority, count(*) as total, sum(case when status in ('open','in_progress','on_hold') and due_at < '2026-10-31 23:43:51' then 1 else 0 end) as overdue from `incidents` where `incidents`.`deleted_at` is null group by `priority`
+```
+
+| type | key | rows | Extra | tiempo |
+|---|---|---|---|---|
+| index | idx_incidents_priority_status | 98475 | Using where; Using index | 28.3 ms |
+
+```sql
+select count(*) as `aggregate` from `incidents` where `incidents`.`deleted_at` is null and `assigned_to` is null and `status` in ('open', 'in_progress', 'on_hold')
+```
+
+| type | key | rows | Extra | tiempo |
+|---|---|---|---|---|
+| range | idx_incidents_assignee_status | 22904 | Using index condition; Using where | 23.1 ms |
+
+```sql
+select DATE(CONVERT_TZ(created_at, '+00:00', '-05:00')) as day, count(*) as total from `incidents` where `incidents`.`deleted_at` is null and `created_at` >= '2026-10-02 05:00:00' group by `day`
+```
+
+| type | key | rows | Extra | tiempo |
+|---|---|---|---|---|
+| range | idx_incidents_created_at | 49237 | Using where; Using index; Using temporary | 28.8 ms |
+
+```sql
+select DATE(CONVERT_TZ(resolved_at, '+00:00', '-05:00')) as day, count(*) as total from `incidents` where `incidents`.`deleted_at` is null and `resolved_at` >= '2026-10-02 05:00:00' group by `day`
+```
+
+| type | key | rows | Extra | tiempo |
+|---|---|---|---|---|
+| range | idx_incidents_resolved_at | 3163 | Using index condition; Using where; Using temporary | 7.3 ms |
+
+
+Tiempo total de `handle()` para el admin, mediana de 5: **110.5 ms**.
+Para el solicitante (filtra por `created_by`): **71.4 ms**.
 
 ## Notas
 
-- **Búsqueda:** el `Using filesort` está acotado a las filas que devuelve FULLTEXT (5.325 aquí), no a la tabla.
-- **Términos amplios:** un término muy amplio, como uno que aparezca en todas las filas, ordenaría más filas. Si ocurre, el siguiente paso es ordenar por relevancia o limitar la búsqueda a `title`.
-- **`assigned_to=me`:** la página recorre `idx_incidents_created_at` hacia atrás y filtra por responsable. Le basta leer unas 51 entradas para llenar 15 resultados, porque cada agente tiene alrededor del 14 % de los casos. El conteo usa `idx_incidents_assignee_status`.
-- **Dashboard:** las consultas del dashboard se miden en la Fase 6 y se agregan a este documento.
+- **Búsqueda:** el `Using filesort` está acotado a las filas que devuelve FULLTEXT (5.325 aquí), no a la tabla. Si un término muy amplio coincidiera con casi todas las filas, el siguiente paso sería ordenar por relevancia o restringir la búsqueda a `title`.
+- **`assigned_to=me`:** la página recorre `idx_incidents_created_at` hacia atrás y filtra por responsable; con unas 51 entradas llena 15 resultados. El conteo usa `idx_incidents_assignee_status`.
+- **Tendencia del dashboard:** `Using temporary` agrupa como mucho 30 días, sobre filas que ya salen filtradas por un rango del índice.
+- **Exportación:** recorre `lazyByIdDesc(1000)`, con una consulta por lote de 1.000 más el eager loading del lote, y escribe con OpenSpout directo a la salida. Ni la memoria ni el tiempo de respuesta crecen con el tamaño. 100.000 filas tardan entre 17 y 23 s, dentro del `fastcgi_read_timeout` de 300 s del gateway. Para volúmenes mucho mayores, el siguiente paso sería un job en cola que deje el archivo para descargar (anexo).

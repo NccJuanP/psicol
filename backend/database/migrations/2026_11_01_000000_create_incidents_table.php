@@ -24,8 +24,9 @@ return new class extends Migration
             $table->softDeletes();
 
             // Each index serves a listing/dashboard query: docs/PLAN.md section 6.
-            $table->index(['status', 'due_at'], 'idx_incidents_status_due');
-            $table->index(['priority', 'status'], 'idx_incidents_priority_status');
+            // deleted_at suffixes make the dashboard GROUP BYs and the overdue count covering (D-42).
+            $table->index(['status', 'due_at', 'deleted_at'], 'idx_incidents_status_due');
+            $table->index(['priority', 'status', 'due_at', 'deleted_at'], 'idx_incidents_priority_status');
             $table->index(['assigned_to', 'status'], 'idx_incidents_assignee_status');
             $table->index(['created_by', 'status'], 'idx_incidents_creator_status');
             // deleted_at as a suffix: the unfiltered count becomes a covering index scan instead of a full

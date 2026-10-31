@@ -99,3 +99,15 @@ Formato: **ID — título**, con contexto, decisión y razón.
 - **Contexto:** InnoDB solo actualiza el índice FULLTEXT al hacer commit, y `RefreshDatabase` envuelve cada test en una transacción que nunca confirma.
 - **Decisión:** `tests/Integration` usa `DatabaseTruncation`; el resto de los tests de base de datos sigue con `RefreshDatabase`.
 - **Razón:** solo la búsqueda necesita commits reales; truncar en todos los tests los haría más lentos sin necesidad.
+
+## D-41 — La exportación sale por id descendente, sin `sort` ni paginación
+
+- **Contexto:** la exportación recorre el resultado con `lazyById`, que exige ordenar por `id`. Un `sort` distinto se perdería en silencio, y el contrato no admite ignorar parámetros.
+- **Decisión:** `GET /incidents/export` acepta `format`, `search` y `filter[...]`; `page`, `per_page` y `sort` responden 422. Las filas salen con `lazyByIdDesc(1000)`, de la más reciente a la más antigua. Las fechas van en hora de Colombia y las etiquetas en español.
+- **Razón:** se conserva la memoria constante y el orden se parece al del listado por defecto. El frontend envía los filtros activos sin el orden.
+
+## D-42 — Sufijo `deleted_at` en los índices de estado y prioridad
+
+- **Contexto:** con 100.000 filas, el dashboard del admin tardaba 356 ms, por encima de los 300 ms. Los `GROUP BY status` y `GROUP BY priority` leían cada fila solo para comprobar `deleted_at`.
+- **Decisión:** `idx_incidents_status_due` pasa a `(status, due_at, deleted_at)` e `idx_incidents_priority_status` a `(priority, status, due_at, deleted_at)`. No se agrega caché.
+- **Razón:** con índices cubrientes, el dashboard baja a unos 100 ms, y los conteos filtrados y de vencidos también mejoran (de 32 a 11 ms y de 24 a 5 ms). Se resuelve en la base de datos, sin invalidación de caché. Mediciones en `docs/performance.md`.
