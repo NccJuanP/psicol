@@ -21,3 +21,15 @@ Formato: **ID — título**, con contexto, decisión y razón.
 - **Contexto:** la imagen `composer:2` trae PHP 8.5, pero el runtime es PHP 8.4 (D-02).
 - **Decisión:** `config.platform.php = 8.4.99` en `backend/composer.json`.
 - **Razón:** el `composer.lock` nunca exige una versión de PHP que el contenedor `app` no tiene.
+
+## D-28 — Configuración de MySQL por flags y script de init en shell
+
+- **Contexto:** la Fase 2 pide `docker/mysql/conf.d/my.cnf` y `docker/mysql/init/01-test-db.sql`.
+- **Decisión:** el cotejamiento va como flags en `command:` del servicio `mysql`, y la BD de tests la crea `01-test-db.sh`.
+- **Razón:** MySQL ignora los `.cnf` montados con permisos de escritura global, que es como Docker Desktop en Windows monta los archivos. Un `.sql` no puede leer `MYSQL_USER`, así que el `GRANT` quedaría fijo a un nombre de usuario.
+
+## D-29 — Sin `compose.dev.yml` por ahora
+
+- **Contexto:** la Fase 2 lo marca como opcional.
+- **Decisión:** no se crea; el flujo de trabajo es `docker compose up -d --build`.
+- **Razón:** menos superficie que mantener; se agrega si la recarga en caliente hace falta en las fases de frontend.
