@@ -28,7 +28,9 @@ return new class extends Migration
             $table->index(['priority', 'status'], 'idx_incidents_priority_status');
             $table->index(['assigned_to', 'status'], 'idx_incidents_assignee_status');
             $table->index(['created_by', 'status'], 'idx_incidents_creator_status');
-            $table->index('created_at', 'idx_incidents_created_at');
+            // deleted_at as a suffix: the unfiltered count becomes a covering index scan instead of a full
+            // table scan, and ORDER BY created_at, id still uses the index (D-38, docs/performance.md).
+            $table->index(['created_at', 'deleted_at'], 'idx_incidents_created_at');
             $table->index('due_at', 'idx_incidents_due_at');
             $table->index('resolved_at', 'idx_incidents_resolved_at');
             $table->fullText(['title', 'description'], 'ft_incidents_search');

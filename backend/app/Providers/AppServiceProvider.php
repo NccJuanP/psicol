@@ -7,7 +7,10 @@ use App\Domain\Incidents\Events\IncidentEvent;
 use App\Domain\Incidents\Models\Incident;
 use App\Policies\IncidentPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -35,6 +38,15 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)
             ->by($request->user()?->id ?: $request->ip()));
+
+        // D-22: lazy loading, missing attributes and discarded attributes throw outside production.
+        Model::shouldBeStrict(! $this->app->isProduction());
+
+        // Paginated<T> in docs/api-contract.md: Laravel's meta also carries path and per-page links.
+        JsonResource::macro('paginationInformation', fn (Request $request, array $paginated, array $default) => [
+            'meta' => Arr::only($default['meta'], ['current_page', 'per_page', 'total', 'last_page', 'from', 'to']),
+            'links' => $default['links'],
+        ]);
 
         Gate::policy(Incident::class, IncidentPolicy::class);
 

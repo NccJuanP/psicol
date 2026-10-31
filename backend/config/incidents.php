@@ -8,4 +8,10 @@ return [
         'medium' => (int) env('INCIDENTS_SLA_MEDIUM', 5),
         'low' => (int) env('INCIDENTS_SLA_LOW', 10),
     ],
+
+    // S-08: storage and API are UTC; day-based filters are read in this zone.
+    'timezone' => 'America/Bogota',
+
+    // S-09: incidents created by DatabaseSeeder.
+    'seed_count' => (int) env('SEED_INCIDENTS', 5000),
 ];

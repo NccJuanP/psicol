@@ -81,3 +81,21 @@ Formato: **ID — título**, con contexto, decisión y razón.
 - **Contexto:** Laravel lee primero `$_SERVER`, donde Docker deja `DB_DATABASE=incidents`; `<env force="true">` de PHPUnit solo escribe `$_ENV`, así que `RefreshDatabase` vaciaba la base principal.
 - **Decisión:** `phpunit.xml` usa `<server>` y `Tests\TestCase::createApplication()` aborta si la base no termina en `_test`.
 - **Razón:** un test nunca debe poder borrar datos reales.
+
+## D-38 — `idx_incidents_created_at` es `(created_at, deleted_at)`
+
+- **Contexto:** con `(created_at)` el conteo del listado sin filtros (`WHERE deleted_at IS NULL`) hacía un recorrido completo de la tabla (`type = ALL`), y la Fase 5 lo prohíbe. `(deleted_at, created_at)` lo arreglaba, pero el optimizador pasaba a preferirlo para los conteos filtrados y estos subían de 30 ms a 200 ms.
+- **Decisión:** `deleted_at` va como sufijo del índice de fecha de creación. La sección 6 del plan sigue sin un índice propio para `deleted_at`.
+- **Razón:** el conteo se vuelve un recorrido de índice cubriente (10 ms), el orden por `created_at, id` sigue usando el índice y no compite con los demás. Las mediciones están en `docs/performance.md`.
+
+## D-39 — La búsqueda descarta términos de menos de 3 caracteres
+
+- **Contexto:** InnoDB no indexa palabras más cortas que `innodb_ft_min_token_size` (3).
+- **Decisión:** los términos de 1 o 2 caracteres se ignoran. Si no queda ninguno, la búsqueda devuelve cero resultados en lugar de todo el listado. Los operadores booleanos que escriba el usuario se eliminan al partir el texto en letras y dígitos.
+- **Razón:** un término que nunca puede coincidir no debe volver obligatoria (`+`) toda la búsqueda, y devolver todo ante "de" sería engañoso.
+
+## D-40 — Tests de búsqueda en una suite `Integration` con truncado
+
+- **Contexto:** InnoDB solo actualiza el índice FULLTEXT al hacer commit, y `RefreshDatabase` envuelve cada test en una transacción que nunca confirma.
+- **Decisión:** `tests/Integration` usa `DatabaseTruncation`; el resto de los tests de base de datos sigue con `RefreshDatabase`.
+- **Razón:** solo la búsqueda necesita commits reales; truncar en todos los tests los haría más lentos sin necesidad.

@@ -20,6 +20,7 @@ Route::prefix('v1')->group(function () {
 
         Route::get('users/assignable', AssignableUserController::class)->middleware('can:incidents.assign');
 
+        Route::get('incidents', [IncidentController::class, 'index']);
         Route::post('incidents', [IncidentController::class, 'store']);
         Route::get('incidents/{incident}', [IncidentController::class, 'show']);
         Route::patch('incidents/{incident}', [IncidentController::class, 'update']);
