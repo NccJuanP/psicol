@@ -33,3 +33,15 @@ Formato: **ID — título**, con contexto, decisión y razón.
 - **Contexto:** la Fase 2 lo marca como opcional.
 - **Decisión:** no se crea; el flujo de trabajo es `docker compose up -d --build`.
 - **Razón:** menos superficie que mantener; se agrega si la recarga en caliente hace falta en las fases de frontend.
+
+## D-30 — `AssignRequestId` es middleware global
+
+- **Contexto:** la Fase 3 lo ubica en el grupo `api`.
+- **Decisión:** se registra como middleware global; `ForceJsonResponse` sí queda en el grupo `api`.
+- **Razón:** las rutas inexistentes (404) no pasan por el middleware de grupo y su error quedaría sin `request_id`.
+
+## D-31 — Tabla `users` sin `email_verified_at` ni `remember_token`
+
+- **Contexto:** el esqueleto de Laravel trae esas columnas; la sección 6 del plan no las incluye.
+- **Decisión:** se quitan y se agrega `is_active`.
+- **Razón:** no hay verificación de correo ni sesiones "recordarme" en una API con tokens Bearer.

@@ -1,0 +1,55 @@
+<?php
+
+// Only the rules this API uses; anything missing falls back to the framework's English file.
+return [
+    'after' => 'El campo :attribute debe ser una fecha posterior a :date.',
+    'after_or_equal' => 'El campo :attribute debe ser una fecha igual o posterior a :date.',
+    'array' => 'El campo :attribute debe ser una lista.',
+    'before_or_equal' => 'El campo :attribute debe ser una fecha igual o anterior a :date.',
+    'between' => [
+        'numeric' => 'El campo :attribute debe estar entre :min y :max.',
+        'string' => 'El campo :attribute debe tener entre :min y :max caracteres.',
+    ],
+    'boolean' => 'El campo :attribute debe ser verdadero o falso.',
+    'date' => 'El campo :attribute no es una fecha válida.',
+    'date_format' => 'El campo :attribute debe tener el formato :format.',
+    'email' => 'El campo :attribute debe ser un correo electrónico válido.',
+    'exists' => 'El valor seleccionado para :attribute no es válido.',
+    'in' => 'El valor del campo :attribute no es válido.',
+    'integer' => 'El campo :attribute debe ser un número entero.',
+    'max' => [
+        'numeric' => 'El campo :attribute no debe ser mayor que :max.',
+        'string' => 'El campo :attribute no debe tener más de :max caracteres.',
+    ],
+    'min' => [
+        'numeric' => 'El campo :attribute debe ser al menos :min.',
+        'string' => 'El campo :attribute debe tener al menos :min caracteres.',
+    ],
+    'numeric' => 'El campo :attribute debe ser un número.',
+    'prohibited' => 'El campo :attribute no está permitido.',
+    'regex' => 'El formato del campo :attribute no es válido.',
+    'required' => 'El campo :attribute es obligatorio.',
+    'required_if' => 'El campo :attribute es obligatorio cuando :other es :value.',
+    'string' => 'El campo :attribute debe ser un texto.',
+
+    'attributes' => [
+        'assigned_to' => 'responsable',
+        'date_field' => 'campo de fecha',
+        'date_from' => 'fecha desde',
+        'date_to' => 'fecha hasta',
+        'description' => 'descripción',
+        'due_at' => 'fecha de vencimiento',
+        'email' => 'correo electrónico',
+        'format' => 'formato',
+        'note' => 'nota',
+        'page' => 'página',
+        'password' => 'contraseña',
+        'per_page' => 'resultados por página',
+        'priority' => 'prioridad',
+        'search' => 'búsqueda',
+        'sort' => 'orden',
+        'status' => 'estado',
+        'title' => 'título',
+        'type' => 'tipo',
+    ],
+];
