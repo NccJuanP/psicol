@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domain\Audit\Listeners\RecordIncidentActivity;
 use App\Domain\Incidents\Events\IncidentEvent;
 use App\Domain\Incidents\Models\Incident;
+use App\Infrastructure\Broadcasting\Listeners\BroadcastIncidentChange;
 use App\Policies\IncidentPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -51,7 +52,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Incident::class, IncidentPolicy::class);
 
         foreach (IncidentEvent::ALL as $event) {
-            Event::listen($event, RecordIncidentActivity::class);
+            Event::listen($event, RecordIncidentActivity::class);  // P1, inside the transaction
+            Event::listen($event, BroadcastIncidentChange::class); // P2 + P3, after commit
         }
 
         // R-16 for every {incident} route: outside the user's visibility it does not exist (404, not 403).

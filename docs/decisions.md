@@ -111,3 +111,15 @@ Formato: **ID — título**, con contexto, decisión y razón.
 - **Contexto:** con 100.000 filas, el dashboard del admin tardaba 356 ms, por encima de los 300 ms. Los `GROUP BY status` y `GROUP BY priority` leían cada fila solo para comprobar `deleted_at`.
 - **Decisión:** `idx_incidents_status_due` pasa a `(status, due_at, deleted_at)` e `idx_incidents_priority_status` a `(priority, status, due_at, deleted_at)`. No se agrega caché.
 - **Razón:** con índices cubrientes, el dashboard baja a unos 100 ms, y los conteos filtrados y de vencidos también mejoran (de 32 a 11 ms y de 24 a 5 ms). Se resuelve en la base de datos, sin invalidación de caché. Mediciones en `docs/performance.md`.
+
+## D-43 — Alcance de los eventos de tiempo real
+
+- **Contexto:** la sección 8 define los canales, pero no qué pasa cuando el creador también es staff ni cuando alguien se autoasigna.
+- **Decisión:** cada cambio va a `private-incidents.staff` y a `private-users.{creador}`, sin importar el rol del creador. `incident.assigned_to_you` solo se emite cuando el nuevo responsable es otra persona, no en la autoasignación. Un comando que falla (409, 422 o rollback) no emite nada, porque el listener implementa `ShouldHandleEventsAfterCommit`.
+- **Razón:** el payload solo dispara una nueva consulta, así que un evento duplicado para un creador que es staff lo absorbe el debounce del frontend. Avisarle a alguien de algo que acaba de hacer él mismo sería ruido.
+
+## D-44 — Autorización de canales con `withBroadcasting`
+
+- **Contexto:** el esqueleto registra `channels.php` con el middleware `web` en `/broadcasting/auth`.
+- **Decisión:** `bootstrap/app.php` usa `withBroadcasting(..., ['prefix' => 'api', 'middleware' => ['api', 'auth:sanctum']])`, que deja la ruta en `/api/broadcasting/auth`.
+- **Razón:** el mismo token Bearer y el mismo formato de error que el resto de la API; el gateway ya enruta `/api` a PHP.

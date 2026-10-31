@@ -17,9 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
-        channels: __DIR__.'/../routes/channels.php',
         health: '/up',
     )
+    // Channel auth at /api/broadcasting/auth with the same Bearer token as the API (D-20: same origin).
+    ->withBroadcasting(__DIR__.'/../routes/channels.php', ['prefix' => 'api', 'middleware' => ['api', 'auth:sanctum']])
     ->withMiddleware(function (Middleware $middleware): void {
         // Global, not only the api group, so unmatched routes (404) also carry a request id.
         $middleware->prepend(AssignRequestId::class);
