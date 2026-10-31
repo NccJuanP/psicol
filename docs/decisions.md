@@ -9,3 +9,15 @@ Formato: **ID — título**, con contexto, decisión y razón.
 - **Contexto:** la Fase 0 pide copiar aquí el documento "Decisiones técnicas", que no se entregó junto al plan.
 - **Decisión:** se referencian las decisiones del plan en vez de duplicarlas; aquí solo se registran las nuevas.
 - **Razón:** una sola fuente de verdad; si el documento aparece, se pega debajo sin cambiar IDs.
+
+## D-26 — El backend no lleva frontend propio
+
+- **Contexto:** el esqueleto de Laravel trae Vite, Tailwind y una vista `welcome`, y `install:broadcasting` genera `resources/js/echo.js`.
+- **Decisión:** se eliminan `package.json`, `vite.config.js`, `resources/js`, `resources/css` y la vista `welcome`; `routes/web.php` queda vacío.
+- **Razón:** el backend es solo API (D-20); la SPA y Echo viven en `frontend/`. Evita un segundo `npm install` y código muerto.
+
+## D-27 — Composer resuelve dependencias para PHP 8.4
+
+- **Contexto:** la imagen `composer:2` trae PHP 8.5, pero el runtime es PHP 8.4 (D-02).
+- **Decisión:** `config.platform.php = 8.4.99` en `backend/composer.json`.
+- **Razón:** el `composer.lock` nunca exige una versión de PHP que el contenedor `app` no tiene.
