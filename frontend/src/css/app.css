@@ -1,0 +1,9 @@
+body {
+  background: #f4f6f9;
+}
+
+.page-title {
+  font-size: 1.375rem;
+  font-weight: 500;
+  margin: 0;
+}
