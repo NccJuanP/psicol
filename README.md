@@ -137,7 +137,7 @@ Documentación en [`docs/`](docs/):
 |---|---|
 | [`PLAN.md`](docs/PLAN.md) | Plan completo: dominio, reglas, decisiones de arquitectura y fases. |
 | [`api-contract.md`](docs/api-contract.md) | Contrato de la API y del tiempo real (endpoints, errores, tipos TypeScript). |
-| [`decisions.md`](docs/decisions.md) | Decisiones tomadas durante la implementación (D-25 en adelante). |
+| [`decisions.md`](docs/decisions.md) | Decisiones de diseño y de implementación, con su porqué (la próxima usa D-64). |
 | [`performance.md`](docs/performance.md) | `EXPLAIN` y tiempos con 100.000 incidentes. |
 
 ## Supuestos y decisiones
