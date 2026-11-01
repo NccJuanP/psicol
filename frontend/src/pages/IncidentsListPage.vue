@@ -8,7 +8,9 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import IncidentFilters from '@/components/incidents/IncidentFilters.vue'
 import PriorityChip from '@/components/incidents/PriorityChip.vue'
 import StatusBadge from '@/components/incidents/StatusBadge.vue'
+import { useDebouncedRefetch } from '@/composables/useDebouncedRefetch'
 import { useIncidentFilters } from '@/composables/useIncidentFilters'
+import { useRealtime } from '@/composables/useRealtime'
 import { useAuthStore } from '@/stores/auth.store'
 import { useCatalogsStore } from '@/stores/catalogs.store'
 import type { IncidentListItem } from '@/types/api'
@@ -65,6 +67,17 @@ async function load(): Promise<void> {
 
 watch(apiParams, load, { immediate: true, deep: true })
 
+// Section 8: refetch 1 s after new/deleted cases or a change to a row on screen.
+const refetchSoon = useDebouncedRefetch(async () => {
+  await load()
+  $q.notify({ message: 'Se actualizó la lista', icon: 'sync', color: 'grey-8', position: 'bottom', timeout: 1500, group: 'list-refresh' })
+}, 1000)
+useRealtime((event) => {
+  if (event.event === 'incident.created' || event.event === 'incident.deleted' || rows.value.some((row) => row.id === event.id)) {
+    refetchSoon()
+  }
+})
+
 const onRequest: QTableProps['onRequest'] = ({ pagination: next }) => {
   const sortBy = next.sortBy || 'created_at'
   void update({ page: next.page, per_page: next.rowsPerPage, sort: `${next.descending ? '-' : ''}${sortBy}` })
@@ -96,6 +109,9 @@ const openDetail = (_event: Event, row: IncidentListItem) => router.push({ name:
         <div class="text-caption text-grey-7">{{ total.toLocaleString('es-CO') }} resultados</div>
       </div>
       <div class="col-auto row q-gutter-sm">
+        <q-btn flat round dense icon="refresh" color="primary" aria-label="Actualizar" :loading="loading" @click="load">
+          <q-tooltip>Actualizar</q-tooltip>
+        </q-btn>
         <q-btn
           flat
           no-caps

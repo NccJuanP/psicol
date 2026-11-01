@@ -2,6 +2,8 @@
 import { useQuasar } from 'quasar'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useRealtime } from '@/composables/useRealtime'
+import { connectionState } from '@/plugins/echo'
 import { useAuthStore } from '@/stores/auth.store'
 import { useCatalogsStore } from '@/stores/catalogs.store'
 import type { Role } from '@/types/api'
@@ -37,6 +39,26 @@ async function logout(): Promise<void> {
 }
 
 onMounted(() => catalogs.load().catch(() => undefined)) // the interceptor already notified
+
+const CONNECTION_LOOK = {
+  connected: { color: 'light-green-4', short: 'En vivo', label: 'Tiempo real conectado' },
+  connecting: { color: 'amber-4', short: 'Conectando…', label: 'Conectando el tiempo real…' },
+  disconnected: { color: 'grey-5', short: 'Sin conexión en vivo', label: 'Tiempo real sin conexión: usa «Actualizar» para ver cambios' },
+}
+const connection = computed(() => CONNECTION_LOOK[connectionState.value])
+
+// P2: the new assignee hears about it wherever they are in the app.
+useRealtime(
+  (event) =>
+    $q.notify({
+      type: 'info',
+      icon: 'assignment_ind',
+      message: `${event.actor?.name ?? 'Alguien'} te asignó ${event.code}.`,
+      timeout: 8000,
+      actions: [{ label: 'Ver', color: 'white', handler: () => router.push({ name: 'incident-detail', params: { id: event.id } }) }],
+    }),
+  ['incident.assigned_to_you'],
+)
 </script>
 
 <template>
@@ -47,6 +69,11 @@ onMounted(() => catalogs.load().catch(() => undefined)) // the interceptor alrea
         <q-toolbar-title class="text-subtitle1 text-weight-medium">Psicol · Incidentes</q-toolbar-title>
 
         <div class="row items-center no-wrap q-gutter-x-sm">
+          <div class="row items-center" role="status" :aria-label="connection.label">
+            <q-icon name="circle" size="10px" :color="connection.color" aria-hidden="true" />
+            <span class="text-caption q-ml-xs gt-sm">{{ connection.short }}</span>
+            <q-tooltip>{{ connection.label }}</q-tooltip>
+          </div>
           <div class="text-right gt-xs">
             <div class="text-body2 ellipsis">{{ auth.user?.name }}</div>
             <div class="text-caption text-blue-1">{{ roleLabel }}</div>

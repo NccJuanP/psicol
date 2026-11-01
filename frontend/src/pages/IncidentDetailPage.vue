@@ -10,6 +10,8 @@ import AssigneeSelect from '@/components/incidents/AssigneeSelect.vue'
 import PriorityChip from '@/components/incidents/PriorityChip.vue'
 import StatusBadge from '@/components/incidents/StatusBadge.vue'
 import TransitionActions from '@/components/incidents/TransitionActions.vue'
+import { useDebouncedRefetch } from '@/composables/useDebouncedRefetch'
+import { useRealtime } from '@/composables/useRealtime'
 import { useAuthStore } from '@/stores/auth.store'
 import { useCatalogsStore } from '@/stores/catalogs.store'
 import type { IncidentDetail, IncidentStatus } from '@/types/api'
@@ -49,6 +51,15 @@ async function load(): Promise<void> {
 }
 
 watch(id, load, { immediate: true })
+
+// Section 8: someone else changed this case → reload detail and timeline (own changes are already applied).
+const reloadSoon = useDebouncedRefetch(async () => {
+  await load()
+  timelineKey.value++
+}, 500)
+useRealtime((event) => {
+  if (event.id === id.value && event.actor?.id !== auth.user?.id) reloadSoon()
+})
 
 /** Runs a command; on a 409 the interceptor already showed the reason, so just reload the truth. */
 async function run(command: () => Promise<IncidentDetail>, done: string): Promise<boolean> {

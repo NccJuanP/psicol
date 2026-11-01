@@ -139,3 +139,15 @@ Formato: **ID — título**, con contexto, decisión y razón.
   - En el detalle, un admin cambia el responsable desde un diálogo (puede dejarlo vacío para quitarlo). Un agente solo ve "Tomar caso", cuando `can.assign` lo permite, y al crear solo puede asignarse a sí mismo.
   - El `router-view` principal usa como `key` la ruta (`path`), para que pasar de editar a crear no reutilice el formulario lleno.
 - **Razón:** reflejan las reglas del backend (R-04, H-4, `IncidentPolicy::assignTo`, S-08) sin duplicarlas: el backend sigue decidiendo.
+
+## D-47 — Dashboard y tiempo real en el frontend
+
+- **Contexto:** la Fase 10 define qué muestra el dashboard y cómo reacciona cada vista a los eventos, pero deja abiertos algunos detalles.
+- **Decisión:**
+  - **Gráficas:** las barras por estado van en un solo tono, porque el eje ya nombra cada barra y llevan el valor directo. En prioridad, "Vencidos" va en rojo de estado con leyenda y "Resto" en un tono neutro. La tendencia usa los dos primeros tonos del orden categórico validado (azul y naranja) con leyenda y tooltip.
+  - **Clics en la tendencia:** solo los puntos de "Creados" llevan al listado, porque `resolved_at` no es un filtro del listado.
+  - **Suscripciones:** cada vista se suscribe con `useRealtime` y se desuscribe al desmontarse, sin abandonar los canales compartidos. Staff escucha `private-incidents.staff` y todos escuchan `private-users.{id}`.
+  - **Conexión:** Echo se conecta y desconecta siguiendo el token de sesión, desde `main.ts`.
+  - **Respaldo:** el listado y el dashboard tienen un botón "Actualizar" para cuando el WebSocket no está disponible.
+  - **Bundle:** el chunk del dashboard pesa unos 560 kB (190 kB gzip) por ECharts, aun importándolo de forma modular. Como la ruta se carga en diferido, el resto de la app no lo paga.
+- **Razón:** se cumplen la sección 8 y la guía de visualización (identidad nunca solo por color, un solo eje y valores en tinta de texto) con el mínimo de piezas.
