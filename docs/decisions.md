@@ -123,3 +123,19 @@ Formato: **ID — título**, con contexto, decisión y razón.
 - **Contexto:** el esqueleto registra `channels.php` con el middleware `web` en `/broadcasting/auth`.
 - **Decisión:** `bootstrap/app.php` usa `withBroadcasting(..., ['prefix' => 'api', 'middleware' => ['api', 'auth:sanctum']])`, que deja la ruta en `/api/broadcasting/auth`.
 - **Razón:** el mismo token Bearer y el mismo formato de error que el resto de la API; el gateway ya enruta `/api` a PHP.
+
+## D-45 — Piezas de la sección 9 que no se crean en el frontend
+
+- **Contexto:** la estructura de la sección 9 lista `usePermissions.ts` y `common/ConfirmDialog`.
+- **Decisión:** no se crean. Los permisos se consultan con `useAuthStore().can()` y las confirmaciones usan el plugin `Dialog` de Quasar. `useDebouncedRefetch` llega en la Fase 10 junto con el tiempo real, que es el único que lo necesita.
+- **Razón:** el primero sería un alias de una línea y el segundo repetiría lo que el plugin ya hace (título, mensaje, botones, `persistent`, `prompt` con validación).
+
+## D-46 — Detalles de comportamiento de las vistas de incidentes
+
+- **Contexto:** el plan pide que las vistas respeten `can` y `allowed_transitions`, sin entrar en algunos casos borde.
+- **Decisión:**
+  - El formulario de edición envía solo los campos que cambiaron. Reenviar una prioridad sin cambios exigiría el permiso de repriorizar y respondería 403.
+  - La fecha de vencimiento se edita con `datetime-local` y se interpreta en hora de Colombia (desfase fijo −05:00).
+  - En el detalle, un admin cambia el responsable desde un diálogo (puede dejarlo vacío para quitarlo). Un agente solo ve "Tomar caso", cuando `can.assign` lo permite, y al crear solo puede asignarse a sí mismo.
+  - El `router-view` principal usa como `key` la ruta (`path`), para que pasar de editar a crear no reutilice el formulario lleno.
+- **Razón:** reflejan las reglas del backend (R-04, H-4, `IncidentPolicy::assignTo`, S-08) sin duplicarlas: el backend sigue decidiendo.

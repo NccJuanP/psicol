@@ -86,7 +86,8 @@ onMounted(() => catalogs.load().catch(() => undefined)) // the interceptor alrea
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <!-- keyed by path: edit → new reuses IncidentFormPage and must start clean; query changes (filters) keep the page -->
+      <router-view :key="$route.path" />
     </q-page-container>
   </q-layout>
 </template>
