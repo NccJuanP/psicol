@@ -70,7 +70,8 @@ async function load(): Promise<void> {
   }
 }
 
-watch(apiParams, load, { immediate: true, deep: true })
+// By value: a new params object with the same content (e.g. a URL rewrite) must not refetch.
+watch(() => JSON.stringify(apiParams.value), load, { immediate: true })
 
 // Section 8: refetch 1 s after new/deleted cases or a change to a row on screen.
 const refetchSoon = useDebouncedRefetch(async () => {
@@ -94,9 +95,17 @@ useRealtime((event) => {
   }
 })
 
+const DEFAULT_SORT = '-created_at'
+
+// Header clicks cycle asc → desc → none; "none" means the default order. Clearing the default itself
+// flips it to ascending, otherwise "Creado" could never be sorted the other way.
 const onRequest: QTableProps['onRequest'] = ({ pagination: next }) => {
-  const sortBy = next.sortBy || 'created_at'
-  void update({ page: next.page, per_page: next.rowsPerPage, sort: `${next.descending ? '-' : ''}${sortBy}` })
+  const sort = next.sortBy
+    ? `${next.descending ? '-' : ''}${next.sortBy}`
+    : state.value.sort === DEFAULT_SORT
+      ? 'created_at'
+      : DEFAULT_SORT
+  void update({ page: next.page, per_page: next.rowsPerPage, sort })
 }
 
 async function exportAs(format: 'csv' | 'xlsx'): Promise<void> {
@@ -195,9 +204,9 @@ const openDetail = (_event: Event, row: IncidentListItem) =>
       :rows-per-page-options="[15, 25, 50, 100]"
       :loading="loading"
       :grid="$q.screen.lt.md"
-      binary-state-sort
       class="incidents-table"
       rows-per-page-label="Filas por página"
+      @update:pagination="() => {} /* QTable only honors :pagination when this listener exists; the URL is the state */"
       @request="onRequest"
       @row-click="openDetail"
     >

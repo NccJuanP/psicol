@@ -42,7 +42,7 @@ const rangeLabel = computed(() => {
 })
 
 function setRange(value: string | { from: string; to: string } | null): void {
-  if (!value) emit('update', { date_from: null, date_to: null })
+  if (!value) emit('update', { date_from: null, date_to: null, date_field: 'created_at' })
   else if (typeof value === 'string') emit('update', { date_from: value, date_to: value })
   else emit('update', { date_from: value.from, date_to: value.to })
 }
@@ -135,32 +135,33 @@ function setRange(value: string | { from: string; to: string } | null): void {
         dense
         readonly
         clearable
+        class="cursor-pointer"
         @clear="setRange(null)"
       >
-        <template #prepend>
-          <q-icon name="event" class="cursor-pointer" aria-label="Elegir fechas">
-            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-              <q-date :model-value="range" range mask="YYYY-MM-DD" today-btn @update:model-value="setRange">
-                <div class="row justify-end"><q-btn v-close-popup label="Listo" color="primary" flat /></div>
-              </q-date>
-            </q-popup-proxy>
-          </q-icon>
-        </template>
+        <template #prepend><q-icon name="event" aria-hidden="true" /></template>
+        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+          <q-date :model-value="range" range mask="YYYY-MM-DD" today-btn @update:model-value="setRange">
+            <div class="row justify-end"><q-btn v-close-popup label="Listo" color="primary" flat /></div>
+          </q-date>
+        </q-popup-proxy>
       </q-input>
-      <q-btn-toggle
-        :model-value="state.date_field"
-        :options="[
-          { label: 'Creación', value: 'created_at' },
-          { label: 'Vencimiento', value: 'due_at' },
-        ]"
-        size="sm"
-        no-caps
-        unelevated
-        toggle-color="primary"
-        class="q-mt-xs"
-        aria-label="Fecha a la que aplica el rango"
-        @update:model-value="emit('update', { date_field: $event })"
-      />
+      <!-- Which date the range filters on; meaningless (and hidden) until a range is chosen. -->
+      <div v-if="state.date_from || state.date_to" class="row items-center q-mt-xs q-gutter-x-sm">
+        <span class="text-caption text-grey-8">El rango aplica a:</span>
+        <q-btn-toggle
+          :model-value="state.date_field"
+          :options="[
+            { label: 'Fecha de creación', value: 'created_at' },
+            { label: 'Fecha de vencimiento', value: 'due_at' },
+          ]"
+          size="sm"
+          no-caps
+          unelevated
+          toggle-color="primary"
+          aria-label="Fecha a la que aplica el rango"
+          @update:model-value="emit('update', { date_field: $event })"
+        />
+      </div>
     </div>
 
     <div class="col-12 col-sm-6 col-md-3 row items-center justify-between no-wrap">
