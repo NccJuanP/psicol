@@ -41,6 +41,11 @@ const columns: QTableColumn<IncidentListItem>[] = [
   { name: 'created_at', label: 'Creado', field: 'created_at', sortable: true, align: 'left', format: formatDateTime },
 ]
 
+// Below the lg breakpoint (with the drawer open) eight columns do not fit; type and creation date stay in the detail.
+const visibleColumns = computed(() =>
+  columns.map((c) => c.name).filter((name) => $q.screen.gt.md || !['type', 'created_at'].includes(name)),
+)
+
 const pagination = computed(() => ({
   page: state.value.page,
   rowsPerPage: state.value.per_page,
@@ -185,6 +190,7 @@ const openDetail = (_event: Event, row: IncidentListItem) =>
       row-key="id"
       :rows="rows"
       :columns="columns"
+      :visible-columns="visibleColumns"
       :pagination="pagination"
       :rows-per-page-options="[15, 25, 50, 100]"
       :loading="loading"
@@ -252,7 +258,8 @@ const openDetail = (_event: Event, row: IncidentListItem) =>
 }
 
 .incidents-table :deep(.title-cell) {
-  max-width: 360px;
+  min-width: 240px;
+  max-width: 420px;
   white-space: normal;
 }
 </style>

@@ -105,11 +105,11 @@ const openDay = (date: string) =>
 <template>
   <q-page padding>
     <div class="row items-center q-col-gutter-sm q-mb-md">
-      <div class="col-12 col-sm">
+      <div class="col-12 col-md">
         <h1 class="page-title">Dashboard</h1>
         <div v-if="stats" class="text-caption text-grey-7">Actualizado {{ formatDateTime(stats.generated_at) }}</div>
       </div>
-      <div class="col-12 col-sm-auto row items-center q-gutter-sm">
+      <div class="col-12 col-md-auto row items-center q-gutter-sm">
         <q-btn-group flat>
           <q-btn
             v-for="s in shortcuts"

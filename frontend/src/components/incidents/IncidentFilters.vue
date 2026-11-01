@@ -113,7 +113,7 @@ function setRange(value: string | { from: string; to: string } | null): void {
       />
     </div>
 
-    <div class="col-12 col-sm-6 col-md-3">
+    <div class="col-12 col-sm-6 col-md-2">
       <q-select
         :model-value="state.type"
         :options="catalogs.catalogs?.types ?? []"
@@ -163,7 +163,7 @@ function setRange(value: string | { from: string; to: string } | null): void {
       />
     </div>
 
-    <div class="col-12 col-sm-6 col-md-2 row items-center justify-between no-wrap">
+    <div class="col-12 col-sm-6 col-md-3 row items-center justify-between no-wrap">
       <q-toggle
         :model-value="state.overdue"
         label="Solo vencidos"
