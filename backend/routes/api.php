@@ -4,11 +4,11 @@ use App\Http\Controllers\Api\V1\AssignableUserController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CatalogController;
 use App\Http\Controllers\Api\V1\DashboardController;
-use App\Http\Controllers\Api\V1\IncidentExportController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\IncidentActivityController;
 use App\Http\Controllers\Api\V1\IncidentAssignmentController;
 use App\Http\Controllers\Api\V1\IncidentController;
+use App\Http\Controllers\Api\V1\IncidentExportController;
 use App\Http\Controllers\Api\V1\IncidentTransitionController;
 use Illuminate\Support\Facades\Route;
 

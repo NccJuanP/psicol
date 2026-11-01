@@ -16,7 +16,9 @@ const assigneeOptions = computed(() => [
   { label: 'Sin asignar', value: 'unassigned' },
   ...users.value.map((user) => ({ label: user.name, value: String(user.id) })),
   // keep a user id coming from the URL selectable even before searching
-  ...(props.state.assigned_to && /^\d+$/.test(props.state.assigned_to) && !users.value.some((u) => String(u.id) === props.state.assigned_to)
+  ...(props.state.assigned_to &&
+  /^\d+$/.test(props.state.assigned_to) &&
+  !users.value.some((u) => String(u.id) === props.state.assigned_to)
     ? [{ label: `Usuario #${props.state.assigned_to}`, value: props.state.assigned_to }]
     : []),
 ])
@@ -126,7 +128,15 @@ function setRange(value: string | { from: string; to: string } | null): void {
     </div>
 
     <div class="col-12 col-sm-6 col-md-4">
-      <q-input :model-value="rangeLabel" label="Rango de fechas" outlined dense readonly clearable @clear="setRange(null)">
+      <q-input
+        :model-value="rangeLabel"
+        label="Rango de fechas"
+        outlined
+        dense
+        readonly
+        clearable
+        @clear="setRange(null)"
+      >
         <template #prepend>
           <q-icon name="event" class="cursor-pointer" aria-label="Elegir fechas">
             <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -160,7 +170,16 @@ function setRange(value: string | { from: string; to: string } | null): void {
         color="negative"
         @update:model-value="emit('update', { overdue: $event })"
       />
-      <q-btn v-if="activeCount > 0" flat dense no-caps color="primary" icon="filter_alt_off" label="Limpiar" @click="emit('reset')" />
+      <q-btn
+        v-if="activeCount > 0"
+        flat
+        dense
+        no-caps
+        color="primary"
+        icon="filter_alt_off"
+        label="Limpiar"
+        @click="emit('reset')"
+      />
     </div>
   </div>
 </template>

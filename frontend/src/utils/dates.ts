@@ -14,7 +14,8 @@ const partsFormat = new Intl.DateTimeFormat('en-CA', {
   hourCycle: 'h23',
 })
 
-export const formatDateTime = (iso: string | null | undefined): string => (iso ? dateTimeFormat.format(new Date(iso)) : '—')
+export const formatDateTime = (iso: string | null | undefined): string =>
+  iso ? dateTimeFormat.format(new Date(iso)) : '—'
 
 export const formatDate = (iso: string | null | undefined): string => (iso ? dateFormat.format(new Date(iso)) : '—')
 

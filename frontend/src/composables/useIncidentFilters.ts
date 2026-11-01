@@ -43,7 +43,8 @@ const text = (query: LocationQuery, key: string): string | null => {
   const value = query[key]
   return typeof value === 'string' && value !== '' ? value : null
 }
-const csv = <T extends string>(query: LocationQuery, key: string) => (text(query, key)?.split(',').filter(Boolean) ?? []) as T[]
+const csv = <T extends string>(query: LocationQuery, key: string) =>
+  (text(query, key)?.split(',').filter(Boolean) ?? []) as T[]
 
 function fromQuery(query: LocationQuery): ListState {
   return {

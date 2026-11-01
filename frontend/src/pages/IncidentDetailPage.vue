@@ -125,13 +125,26 @@ function remove(): void {
   <q-page padding>
     <div class="detail-wrap">
       <div class="row items-center q-mb-md no-wrap">
-        <q-btn flat round dense icon="arrow_back" aria-label="Volver al listado" class="q-mr-sm" @click="router.back()" />
+        <q-btn
+          flat
+          round
+          dense
+          icon="arrow_back"
+          aria-label="Volver al listado"
+          class="q-mr-sm"
+          @click="router.back()"
+        />
         <span class="text-grey-8">Incidentes</span>
       </div>
 
       <q-inner-loading :showing="loading && !incident" />
 
-      <EmptyState v-if="notFound" icon="search_off" title="Incidente no encontrado" message="No existe, fue eliminado o no tienes acceso a él.">
+      <EmptyState
+        v-if="notFound"
+        icon="search_off"
+        title="Incidente no encontrado"
+        message="No existe, fue eliminado o no tienes acceso a él."
+      >
         <q-btn color="primary" unelevated label="Ir al listado" :to="{ name: 'incidents' }" />
       </EmptyState>
 
@@ -140,7 +153,9 @@ function remove(): void {
           <q-card-section>
             <div class="row items-start q-col-gutter-sm">
               <div class="col-12 col-md">
-                <div class="text-caption text-grey-7">{{ incident.code }} · {{ catalogs.typeLabel(incident.type) }}</div>
+                <div class="text-caption text-grey-7">
+                  {{ incident.code }} · {{ catalogs.typeLabel(incident.type) }}
+                </div>
                 <h1 class="page-title q-mt-xs">{{ incident.title }}</h1>
                 <div class="row items-center q-gutter-sm q-mt-sm">
                   <StatusBadge :status="incident.status" />
@@ -148,8 +163,25 @@ function remove(): void {
                 </div>
               </div>
               <div class="col-12 col-md-auto row q-gutter-sm justify-end">
-                <q-btn v-if="canEdit" outline no-caps color="primary" icon="edit" label="Editar" :to="{ name: 'incident-edit', params: { id } }" />
-                <q-btn v-if="incident.can.delete" flat no-caps color="negative" icon="delete_outline" label="Eliminar" :disable="busy" @click="remove" />
+                <q-btn
+                  v-if="canEdit"
+                  outline
+                  no-caps
+                  color="primary"
+                  icon="edit"
+                  label="Editar"
+                  :to="{ name: 'incident-edit', params: { id } }"
+                />
+                <q-btn
+                  v-if="incident.can.delete"
+                  flat
+                  no-caps
+                  color="negative"
+                  icon="delete_outline"
+                  label="Eliminar"
+                  :disable="busy"
+                  @click="remove"
+                />
               </div>
             </div>
           </q-card-section>
@@ -191,8 +223,26 @@ function remove(): void {
                     <q-item-label>{{ incident.assignee?.name ?? 'Sin asignar' }}</q-item-label>
                   </q-item-section>
                   <q-item-section v-if="incident.can.assign" side>
-                    <q-btn v-if="isAdmin" flat dense no-caps color="primary" label="Cambiar" :disable="busy" @click="openAssign" />
-                    <q-btn v-else flat dense no-caps color="primary" label="Tomar caso" :disable="busy" @click="takeIncident" />
+                    <q-btn
+                      v-if="isAdmin"
+                      flat
+                      dense
+                      no-caps
+                      color="primary"
+                      label="Cambiar"
+                      :disable="busy"
+                      @click="openAssign"
+                    />
+                    <q-btn
+                      v-else
+                      flat
+                      dense
+                      no-caps
+                      color="primary"
+                      label="Tomar caso"
+                      :disable="busy"
+                      @click="takeIncident"
+                    />
                   </q-item-section>
                 </q-item>
                 <q-item>
@@ -204,7 +254,9 @@ function remove(): void {
                 <q-item>
                   <q-item-section>
                     <q-item-label caption>Vence</q-item-label>
-                    <q-item-label :class="{ 'text-negative text-weight-medium': incident.is_overdue }">{{ formatDateTime(incident.due_at) }}</q-item-label>
+                    <q-item-label :class="{ 'text-negative text-weight-medium': incident.is_overdue }">{{
+                      formatDateTime(incident.due_at)
+                    }}</q-item-label>
                   </q-item-section>
                 </q-item>
                 <q-item>

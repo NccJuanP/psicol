@@ -15,7 +15,12 @@ const lastPage = ref(1)
 const loading = ref(false)
 const failed = ref(false)
 
-const FIELD_LABELS: Record<string, string> = { title: 'el título', description: 'la descripción', type: 'el tipo', due_at: 'el vencimiento' }
+const FIELD_LABELS: Record<string, string> = {
+  title: 'el título',
+  description: 'la descripción',
+  type: 'el tipo',
+  due_at: 'el vencimiento',
+}
 
 function describe(activity: Activity): string {
   const change = (field: string) => activity.changes[field] as { from: unknown; to: unknown } | undefined
@@ -23,7 +28,9 @@ function describe(activity: Activity): string {
     case 'created':
       return 'registró el caso'
     case 'updated':
-      return `cambió ${Object.keys(activity.changes).map((f) => FIELD_LABELS[f] ?? f).join(', ')}`
+      return `cambió ${Object.keys(activity.changes)
+        .map((f) => FIELD_LABELS[f] ?? f)
+        .join(', ')}`
     case 'reprioritized': {
       const c = change('priority')
       return `cambió la prioridad de ${catalogs.priorityLabel(c?.from as Priority)} a ${catalogs.priorityLabel(c?.to as Priority)}`
@@ -66,7 +73,11 @@ async function load(nextPage: number): Promise<void> {
   }
 }
 
-watch(() => [props.incidentId, props.reloadKey], () => load(1), { immediate: true })
+watch(
+  () => [props.incidentId, props.reloadKey],
+  () => load(1),
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -81,14 +92,25 @@ watch(() => [props.incidentId, props.reloadKey], () => load(1), { immediate: tru
         <div>
           <span class="text-weight-medium">{{ activity.actor?.name ?? 'Sistema' }}</span> {{ describe(activity) }}
         </div>
-        <blockquote v-if="activity.note" class="q-ma-none q-mt-xs q-pa-sm bg-grey-2 rounded-borders">{{ activity.note }}</blockquote>
+        <blockquote v-if="activity.note" class="q-ma-none q-mt-xs q-pa-sm bg-grey-2 rounded-borders">
+          {{ activity.note }}
+        </blockquote>
       </q-timeline-entry>
     </q-timeline>
 
     <div v-if="failed" class="text-negative q-mb-sm">
-      No se pudo cargar la actividad. <q-btn flat dense no-caps color="primary" label="Reintentar" @click="load(page)" />
+      No se pudo cargar la actividad.
+      <q-btn flat dense no-caps color="primary" label="Reintentar" @click="load(page)" />
     </div>
-    <q-btn v-if="page < lastPage" flat no-caps color="primary" label="Ver actividad anterior" :loading="loading" @click="load(page + 1)" />
+    <q-btn
+      v-if="page < lastPage"
+      flat
+      no-caps
+      color="primary"
+      label="Ver actividad anterior"
+      :loading="loading"
+      @click="load(page + 1)"
+    />
     <q-inner-loading :showing="loading && items.length === 0" />
   </div>
 </template>

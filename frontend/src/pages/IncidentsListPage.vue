@@ -70,10 +70,21 @@ watch(apiParams, load, { immediate: true, deep: true })
 // Section 8: refetch 1 s after new/deleted cases or a change to a row on screen.
 const refetchSoon = useDebouncedRefetch(async () => {
   await load()
-  $q.notify({ message: 'Se actualizó la lista', icon: 'sync', color: 'grey-8', position: 'bottom', timeout: 1500, group: 'list-refresh' })
+  $q.notify({
+    message: 'Se actualizó la lista',
+    icon: 'sync',
+    color: 'grey-8',
+    position: 'bottom',
+    timeout: 1500,
+    group: 'list-refresh',
+  })
 }, 1000)
 useRealtime((event) => {
-  if (event.event === 'incident.created' || event.event === 'incident.deleted' || rows.value.some((row) => row.id === event.id)) {
+  if (
+    event.event === 'incident.created' ||
+    event.event === 'incident.deleted' ||
+    rows.value.some((row) => row.id === event.id)
+  ) {
     refetchSoon()
   }
 })
@@ -98,7 +109,8 @@ async function exportAs(format: 'csv' | 'xlsx'): Promise<void> {
   }
 }
 
-const openDetail = (_event: Event, row: IncidentListItem) => router.push({ name: 'incident-detail', params: { id: row.id } })
+const openDetail = (_event: Event, row: IncidentListItem) =>
+  router.push({ name: 'incident-detail', params: { id: row.id } })
 </script>
 
 <template>
@@ -132,7 +144,9 @@ const openDetail = (_event: Event, row: IncidentListItem) => router.push({ name:
         >
           <q-list>
             <q-item v-close-popup clickable @click="exportAs('csv')"><q-item-section>CSV</q-item-section></q-item>
-            <q-item v-close-popup clickable @click="exportAs('xlsx')"><q-item-section>Excel (XLSX)</q-item-section></q-item>
+            <q-item v-close-popup clickable @click="exportAs('xlsx')"
+              ><q-item-section>Excel (XLSX)</q-item-section></q-item
+            >
           </q-list>
         </q-btn-dropdown>
         <q-btn

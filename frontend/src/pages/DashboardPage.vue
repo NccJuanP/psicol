@@ -20,7 +20,11 @@ const router = useRouter()
 const catalogs = useCatalogsStore()
 
 // No default range: the dashboard opens on the whole population (S-10).
-const filters = reactive<{ from: string | null; to: string | null; type: IncidentType | null }>({ from: null, to: null, type: null })
+const filters = reactive<{ from: string | null; to: string | null; type: IncidentType | null }>({
+  from: null,
+  to: null,
+  type: null,
+})
 const stats = ref<DashboardStats | null>(null)
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -48,15 +52,24 @@ useRealtime(useDebouncedRefetch(load, 2000)) // section 8: dashboard refetches 2
 
 // Range shortcuts in Bogota days (S-08).
 const today = () => toLocalInput(new Date().toISOString()).slice(0, 10)
-const daysAgo = (days: number) => new Date(Date.parse(`${today()}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10)
+const daysAgo = (days: number) =>
+  new Date(Date.parse(`${today()}T00:00:00Z`) - days * 86_400_000).toISOString().slice(0, 10)
 const shortcuts = [
   { label: '7 días', apply: () => Object.assign(filters, { from: daysAgo(6), to: today() }) },
   { label: '30 días', apply: () => Object.assign(filters, { from: daysAgo(29), to: today() }) },
   { label: 'Este mes', apply: () => Object.assign(filters, { from: `${today().slice(0, 8)}01`, to: today() }) },
 ]
 
-const range = computed(() => (filters.from ? (filters.from === filters.to ? filters.from : { from: filters.from, to: filters.to ?? filters.from }) : null))
-const rangeLabel = computed(() => (filters.from ? (filters.from === filters.to ? filters.from : `${filters.from} → ${filters.to}`) : 'Todo el periodo'))
+const range = computed(() =>
+  filters.from
+    ? filters.from === filters.to
+      ? filters.from
+      : { from: filters.from, to: filters.to ?? filters.from }
+    : null,
+)
+const rangeLabel = computed(() =>
+  filters.from ? (filters.from === filters.to ? filters.from : `${filters.from} → ${filters.to}`) : 'Todo el periodo',
+)
 
 function setRange(value: string | { from: string; to: string } | null): void {
   if (!value) Object.assign(filters, { from: null, to: null })
@@ -74,14 +87,19 @@ function listLink(extra: Record<string, string> = {}) {
 }
 
 const overdueShare = computed(() =>
-  stats.value && stats.value.active > 0 ? `${Math.round((stats.value.overdue / stats.value.active) * 100)} % de los activos` : 'Sin casos activos',
+  stats.value && stats.value.active > 0
+    ? `${Math.round((stats.value.overdue / stats.value.active) * 100)} % de los activos`
+    : 'Sin casos activos',
 )
 
 const openStatus = (status: IncidentStatus) => router.push(listLink({ status }))
 const openPriority = (priority: Priority, overdueOnly: boolean) =>
   router.push(listLink({ priority, ...(overdueOnly ? { overdue: 'true' } : {}) }))
 const openDay = (date: string) =>
-  router.push({ name: 'incidents', query: { date_from: date, date_to: date, ...(filters.type ? { type: filters.type } : {}) } })
+  router.push({
+    name: 'incidents',
+    query: { date_from: date, date_to: date, ...(filters.type ? { type: filters.type } : {}) },
+  })
 </script>
 
 <template>
@@ -93,9 +111,25 @@ const openDay = (date: string) =>
       </div>
       <div class="col-12 col-sm-auto row items-center q-gutter-sm">
         <q-btn-group flat>
-          <q-btn v-for="s in shortcuts" :key="s.label" flat dense no-caps color="primary" :label="s.label" @click="s.apply" />
+          <q-btn
+            v-for="s in shortcuts"
+            :key="s.label"
+            flat
+            dense
+            no-caps
+            color="primary"
+            :label="s.label"
+            @click="s.apply"
+          />
         </q-btn-group>
-        <q-input :model-value="rangeLabel" dense outlined readonly class="range-input" aria-label="Rango de fechas de creación">
+        <q-input
+          :model-value="rangeLabel"
+          dense
+          outlined
+          readonly
+          class="range-input"
+          aria-label="Rango de fechas de creación"
+        >
           <template #prepend>
             <q-icon name="event" class="cursor-pointer" aria-label="Elegir fechas">
               <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -138,10 +172,23 @@ const openDay = (date: string) =>
           <StatCard label="Total" :value="stats.total" icon="inventory_2" color="primary" :to="listLink()" />
         </div>
         <div class="col-6 col-md-3">
-          <StatCard label="Activos" :value="stats.active" icon="pending_actions" color="indigo-6" :to="listLink({ status: ACTIVE.join(',') })" />
+          <StatCard
+            label="Activos"
+            :value="stats.active"
+            icon="pending_actions"
+            color="indigo-6"
+            :to="listLink({ status: ACTIVE.join(',') })"
+          />
         </div>
         <div class="col-6 col-md-3">
-          <StatCard label="Vencidos" :value="stats.overdue" icon="schedule" color="negative" :caption="overdueShare" :to="listLink({ overdue: 'true' })" />
+          <StatCard
+            label="Vencidos"
+            :value="stats.overdue"
+            icon="schedule"
+            color="negative"
+            :caption="overdueShare"
+            :to="listLink({ overdue: 'true' })"
+          />
         </div>
         <div class="col-6 col-md-3">
           <StatCard
@@ -172,7 +219,9 @@ const openDay = (date: string) =>
           <q-card flat bordered>
             <q-card-section class="q-pb-none">
               <div class="text-subtitle2">Creados vs. resueltos</div>
-              <div class="text-caption text-grey-7">Últimos 30 días (no depende del rango). Haz clic en un día de «Creados» para verlos.</div>
+              <div class="text-caption text-grey-7">
+                Últimos 30 días (no depende del rango). Haz clic en un día de «Creados» para verlos.
+              </div>
             </q-card-section>
             <q-card-section><TrendChart :data="stats.trend" @select="openDay" /></q-card-section>
           </q-card>

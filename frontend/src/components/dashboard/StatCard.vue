@@ -6,7 +6,11 @@ defineProps<{ label: string; value: number; icon: string; color: string; caption
 
 <template>
   <q-card flat bordered class="stat-card full-height">
-    <router-link :to="to" class="stat-link column q-pa-md full-height" :aria-label="`${label}: ${value}. Ver en el listado`">
+    <router-link
+      :to="to"
+      class="stat-link column q-pa-md full-height"
+      :aria-label="`${label}: ${value}. Ver en el listado`"
+    >
       <div class="row items-center no-wrap">
         <q-icon :name="icon" :color="color" size="22px" aria-hidden="true" />
         <span class="q-ml-sm text-grey-8 text-body2">{{ label }}</span>

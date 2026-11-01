@@ -19,8 +19,9 @@ export function useServerErrors() {
 
   function clearField(field: string): void {
     if (field in errors.value) {
-      const { [field]: _removed, ...rest } = errors.value
-      errors.value = rest
+      const next = { ...errors.value }
+      delete next[field]
+      errors.value = next
     }
   }
 

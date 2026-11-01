@@ -34,7 +34,10 @@ const CHANGE_EVENTS: RealtimeEventName[] = [
  * incidents.staff; everyone hears changes to their own cases on users.{id}. The private channels stay
  * joined (other components share them); only this component's callbacks are removed.
  */
-export function useRealtime(handler: (event: RealtimeEvent) => void, events: RealtimeEventName[] = CHANGE_EVENTS): void {
+export function useRealtime(
+  handler: (event: RealtimeEvent) => void,
+  events: RealtimeEventName[] = CHANGE_EVENTS,
+): void {
   const echo = getEcho()
   const auth = useAuthStore()
   if (!echo || !auth.user) return

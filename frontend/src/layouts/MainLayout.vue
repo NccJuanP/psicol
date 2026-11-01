@@ -24,7 +24,12 @@ const links = computed(() =>
   [
     { to: { name: 'dashboard' }, icon: 'dashboard', label: 'Dashboard', permission: 'dashboard.view' },
     { to: { name: 'incidents' }, icon: 'list_alt', label: 'Incidentes', permission: null },
-    { to: { name: 'incident-create' }, icon: 'add_circle_outline', label: 'Nuevo incidente', permission: 'incidents.create' },
+    {
+      to: { name: 'incident-create' },
+      icon: 'add_circle_outline',
+      label: 'Nuevo incidente',
+      permission: 'incidents.create',
+    },
   ].filter((link) => link.permission === null || auth.can(link.permission)),
 )
 
@@ -43,7 +48,11 @@ onMounted(() => catalogs.load().catch(() => undefined)) // the interceptor alrea
 const CONNECTION_LOOK = {
   connected: { color: 'light-green-4', short: 'En vivo', label: 'Tiempo real conectado' },
   connecting: { color: 'amber-4', short: 'Conectando…', label: 'Conectando el tiempo real…' },
-  disconnected: { color: 'grey-5', short: 'Sin conexión en vivo', label: 'Tiempo real sin conexión: usa «Actualizar» para ver cambios' },
+  disconnected: {
+    color: 'grey-5',
+    short: 'Sin conexión en vivo',
+    label: 'Tiempo real sin conexión: usa «Actualizar» para ver cambios',
+  },
 }
 const connection = computed(() => CONNECTION_LOOK[connectionState.value])
 
@@ -55,7 +64,13 @@ useRealtime(
       icon: 'assignment_ind',
       message: `${event.actor?.name ?? 'Alguien'} te asignó ${event.code}.`,
       timeout: 8000,
-      actions: [{ label: 'Ver', color: 'white', handler: () => router.push({ name: 'incident-detail', params: { id: event.id } }) }],
+      actions: [
+        {
+          label: 'Ver',
+          color: 'white',
+          handler: () => router.push({ name: 'incident-detail', params: { id: event.id } }),
+        },
+      ],
     }),
   ['incident.assigned_to_you'],
 )
@@ -102,12 +117,21 @@ useRealtime(
           </q-item-section>
         </q-item>
 
-        <q-item v-for="link in links" :key="link.label" :to="link.to" clickable active-class="text-primary bg-blue-1" exact>
+        <q-item
+          v-for="link in links"
+          :key="link.label"
+          :to="link.to"
+          clickable
+          active-class="text-primary bg-blue-1"
+          exact
+        >
           <q-item-section avatar>
             <q-icon :name="link.icon" />
           </q-item-section>
           <q-item-section>{{ link.label }}</q-item-section>
-          <q-tooltip v-if="mini && $q.screen.gt.sm" anchor="center right" self="center left">{{ link.label }}</q-tooltip>
+          <q-tooltip v-if="mini && $q.screen.gt.sm" anchor="center right" self="center left">{{
+            link.label
+          }}</q-tooltip>
         </q-item>
       </q-list>
     </q-drawer>

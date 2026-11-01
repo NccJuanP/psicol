@@ -18,7 +18,11 @@ const option = computed(() => ({
   legend: { top: 0, left: 0, icon: 'roundRect', itemWidth: 12, itemHeight: 12, textStyle: { color: CHART.text } },
   grid: { left: 8, right: 16, top: 32, bottom: 8, containLabel: true },
   tooltip: { ...baseOption.tooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
-  xAxis: { type: 'value', splitLine: { lineStyle: { color: CHART.grid } }, axisLabel: { color: CHART.text, formatter: formatNumber, hideOverlap: true } },
+  xAxis: {
+    type: 'value',
+    splitLine: { lineStyle: { color: CHART.grid } },
+    axisLabel: { color: CHART.text, formatter: formatNumber, hideOverlap: true },
+  },
   yAxis: {
     type: 'category',
     data: rows.value.map((row) => catalogs.priorityLabel(row.priority)),
@@ -56,7 +60,10 @@ const option = computed(() => ({
     class="chart"
     role="img"
     :aria-label="`Incidentes por prioridad: ${data.map((r) => `${catalogs.priorityLabel(r.priority)} ${r.count}, ${r.overdue} vencidos`).join('; ')}`"
-    @click="(e: { dataIndex: number; seriesName?: string }) => emit('select', rows[e.dataIndex].priority, e.seriesName === 'Vencidos')"
+    @click="
+      (e: { dataIndex: number; seriesName?: string }) =>
+        emit('select', rows[e.dataIndex].priority, e.seriesName === 'Vencidos')
+    "
   />
 </template>
 

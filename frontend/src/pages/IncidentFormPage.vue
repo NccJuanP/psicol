@@ -44,7 +44,10 @@ const isAdmin = computed(() => auth.user?.roles.includes('admin') ?? false)
 
 // Same limits as StoreIncidentRequest / UpdateIncidentRequest (R-03, R-06).
 const rules = {
-  title: [(v: string) => v.trim().length >= 5 || 'Mínimo 5 caracteres.', (v: string) => v.length <= 150 || 'Máximo 150 caracteres.'],
+  title: [
+    (v: string) => v.trim().length >= 5 || 'Mínimo 5 caracteres.',
+    (v: string) => v.length <= 150 || 'Máximo 150 caracteres.',
+  ],
   description: [
     (v: string) => v.trim().length >= 10 || 'Mínimo 10 caracteres.',
     (v: string) => v.length <= 5000 || 'Máximo 5.000 caracteres.',
@@ -154,10 +157,20 @@ const backTo = computed(() =>
 
       <q-inner-loading :showing="loading" />
 
-      <EmptyState v-if="loadError === 'not_found'" icon="search_off" title="Incidente no encontrado" message="No existe o no tienes acceso a él.">
+      <EmptyState
+        v-if="loadError === 'not_found'"
+        icon="search_off"
+        title="Incidente no encontrado"
+        message="No existe o no tienes acceso a él."
+      >
         <q-btn color="primary" unelevated label="Ir al listado" :to="{ name: 'incidents' }" />
       </EmptyState>
-      <EmptyState v-else-if="loadError === 'locked'" icon="lock" title="No puedes editar este caso" message="Su estado actual o tu rol no permiten cambios.">
+      <EmptyState
+        v-else-if="loadError === 'locked'"
+        icon="lock"
+        title="No puedes editar este caso"
+        message="Su estado actual o tu rol no permiten cambios."
+      >
         <q-btn color="primary" unelevated label="Ver detalle" :to="backTo" />
       </EmptyState>
 

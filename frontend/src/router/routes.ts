@@ -15,7 +15,9 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     component: AuthLayout,
-    children: [{ path: '', name: 'login', component: () => import('@/pages/LoginPage.vue'), meta: { guestOnly: true } }],
+    children: [
+      { path: '', name: 'login', component: () => import('@/pages/LoginPage.vue'), meta: { guestOnly: true } },
+    ],
   },
   {
     path: '/',
@@ -53,7 +55,12 @@ export const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/IncidentFormPage.vue'),
         meta: { requiresAuth: true, permission: 'incidents.update' },
       },
-      { path: '403', name: 'forbidden', component: () => import('@/pages/ForbiddenPage.vue'), meta: { requiresAuth: true } },
+      {
+        path: '403',
+        name: 'forbidden',
+        component: () => import('@/pages/ForbiddenPage.vue'),
+        meta: { requiresAuth: true },
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/pages/NotFoundPage.vue') },

@@ -15,7 +15,13 @@ function run(to: IncidentStatus): void {
     $q.dialog({
       title: 'Reabrir caso',
       message: 'Explica por qué se reabre (entre 10 y 500 caracteres).',
-      prompt: { model: '', type: 'textarea', counter: true, maxlength: 500, isValid: (v: string) => v.trim().length >= 10 },
+      prompt: {
+        model: '',
+        type: 'textarea',
+        counter: true,
+        maxlength: 500,
+        isValid: (v: string) => v.trim().length >= 10,
+      },
       cancel: { label: 'Cancelar', flat: true },
       ok: { label: 'Reabrir', color: 'primary', unelevated: true },
       persistent: true,
@@ -23,7 +29,10 @@ function run(to: IncidentStatus): void {
   } else if (to === 'cancelled' || to === 'closed') {
     $q.dialog({
       title: `${transitionLabel(from, to)} ${props.incident.code}`,
-      message: to === 'cancelled' ? 'El caso se retira sin resolverse y ya no admitirá cambios.' : 'Confirmas que la solución es correcta. El caso ya no admitirá cambios.',
+      message:
+        to === 'cancelled'
+          ? 'El caso se retira sin resolverse y ya no admitirá cambios.'
+          : 'Confirmas que la solución es correcta. El caso ya no admitirá cambios.',
       cancel: { label: 'Volver', flat: true },
       ok: { label: transitionLabel(from, to), color: to === 'cancelled' ? 'negative' : 'primary', unelevated: true },
     }).onOk(() => emit('transition', to))

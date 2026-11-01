@@ -13,7 +13,11 @@ const option = computed(() => ({
   ...baseOption,
   legend: { top: 0, left: 0, icon: 'roundRect', itemWidth: 12, itemHeight: 12, textStyle: { color: CHART.text } },
   grid: { left: 8, right: 16, top: 36, bottom: 8, containLabel: true },
-  tooltip: { ...baseOption.tooltip, trigger: 'axis', axisPointer: { type: 'line', lineStyle: { color: CHART.text, type: 'dashed' } } },
+  tooltip: {
+    ...baseOption.tooltip,
+    trigger: 'axis',
+    axisPointer: { type: 'line', lineStyle: { color: CHART.text, type: 'dashed' } },
+  },
   xAxis: {
     type: 'category',
     boundaryGap: false,
@@ -22,7 +26,12 @@ const option = computed(() => ({
     axisLine: { lineStyle: { color: CHART.grid } },
     axisLabel: { color: CHART.text, hideOverlap: true },
   },
-  yAxis: { type: 'value', minInterval: 1, splitLine: { lineStyle: { color: CHART.grid } }, axisLabel: { color: CHART.text, formatter: formatNumber } },
+  yAxis: {
+    type: 'value',
+    minInterval: 1,
+    splitLine: { lineStyle: { color: CHART.grid } },
+    axisLabel: { color: CHART.text, formatter: formatNumber },
+  },
   series: [
     {
       type: 'line',

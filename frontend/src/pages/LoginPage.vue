@@ -100,7 +100,15 @@ async function submit(): Promise<void> {
           </template>
         </q-input>
 
-        <q-btn type="submit" color="primary" label="Ingresar" class="full-width" unelevated size="md" :loading="submitting" />
+        <q-btn
+          type="submit"
+          color="primary"
+          label="Ingresar"
+          class="full-width"
+          unelevated
+          size="md"
+          :loading="submitting"
+        />
       </q-form>
     </q-card-section>
   </q-card>

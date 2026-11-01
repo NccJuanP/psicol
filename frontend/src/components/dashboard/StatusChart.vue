@@ -31,7 +31,12 @@ const option = computed(() => ({
       data: props.data.map((row) => row.count),
       barMaxWidth: 18,
       itemStyle: { color: CHART.series1, borderRadius: [0, 4, 4, 0] },
-      label: { show: true, position: 'right', color: CHART.text, formatter: ({ value }: { value: number }) => value.toLocaleString('es-CO') },
+      label: {
+        show: true,
+        position: 'right',
+        color: CHART.text,
+        formatter: ({ value }: { value: number }) => value.toLocaleString('es-CO'),
+      },
       cursor: 'pointer',
     },
   ],

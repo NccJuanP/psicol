@@ -19,8 +19,11 @@ export const PRIORITY_LOOK: Record<Priority, { color: string; icon: string }> = 
 
 /** UI name of each transition (docs/PLAN.md section 4); one command, several actions. */
 export function transitionLabel(from: IncidentStatus, to: IncidentStatus): string {
-  if (to === 'in_progress') return from === 'on_hold' ? 'Reanudar' : from === 'resolved' ? 'Reabrir' : 'Iniciar atención'
-  return { on_hold: 'Poner en espera', resolved: 'Resolver', closed: 'Cerrar', cancelled: 'Cancelar', open: 'Abrir' }[to]
+  if (to === 'in_progress')
+    return from === 'on_hold' ? 'Reanudar' : from === 'resolved' ? 'Reabrir' : 'Iniciar atención'
+  return { on_hold: 'Poner en espera', resolved: 'Resolver', closed: 'Cerrar', cancelled: 'Cancelar', open: 'Abrir' }[
+    to
+  ]
 }
 
 export const transitionIcon: Record<IncidentStatus, string> = {

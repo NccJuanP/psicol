@@ -37,7 +37,8 @@ export function connectEcho(token: string): void {
   connectionState.value = 'connecting'
   // pusher-js reconnects on its own with backoff; we only mirror its state.
   echo.connector.pusher.connection.bind('state_change', ({ current }: { current: string }) => {
-    connectionState.value = current === 'connected' ? 'connected' : current === 'connecting' ? 'connecting' : 'disconnected'
+    connectionState.value =
+      current === 'connected' ? 'connected' : current === 'connecting' ? 'connecting' : 'disconnected'
   })
 }
 
